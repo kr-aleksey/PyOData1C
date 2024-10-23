@@ -1,4 +1,4 @@
-PuOData1C - ORM для обмена данными с системами учета компании "1С"
+PyOData1C - ORM для обмена данными с системами учета компании "1С"
 
 PyOData1C работает через HTTP REST сервис 1С. REST 1С использует протокол OData версии 3. REST интерфейс использует 
 возможности протокола OData лишь частично. В свою очередь в PyOData1C реализована поддержка только основных возможностей 
@@ -6,7 +6,7 @@ REST OData 1C. PyOData1C использует Pydantic для сериализа
 
 Установка
 
-pip install odata-1c
+pip install PyOData1C
 
 Зависимости
 
@@ -17,9 +17,9 @@ Requests >= 2.32
 Использование
 
 ```python
-from src.http import Connection, auth
-from src.models import OdataModel
-from src.odata import OData
+from PyOData1C.http import auth, Connection
+from PyOData1C.models import OdataModel
+from PyOData1C.odata import OData
 from pydantic import Field, UUID1
 
 
@@ -45,7 +45,7 @@ class NomenclatureOdata(OData):
     entity_name = 'Catalog_Номенклатура'
 
 
-with Connection('my1c.domain.ru',
+with Connection('10.0.0.1',
                 'http',
                 auth.HTTPBasicAuth('user', 'pass')) as conn:
     nomenclatures: list[OdataModel] = (NomenclatureOdata
