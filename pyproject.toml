@@ -8,7 +8,7 @@ dependencies = [
   "pydantic>=2.9",
   "requests>=2.32",
 ]
-description = "ORM for 1C REST OData"
+description = "ORM for 1C"
 readme = "README.md"
 requires-python = ">=3.11"
 classifiers = [
