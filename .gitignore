@@ -1,0 +1,4 @@
+.venv
+.idea
+/dist/
+/src/PyOdata1C.egg-info/

@@ -1,0 +1,25 @@
+[project]
+name = "PyOData1C"
+version = "0.0.1"
+authors = [
+  { name="Aleksey Kravtsun", email="kravtsun.aleksey@gmail.com" },
+]
+dependencies = [
+  "pydantic>=2.9",
+  "requests>=2.32",
+]
+description = "ORM for 1C REST OData"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Development Status :: 4 - Beta",
+]
+
+[project.urls]
+Homepage = "https://github.com/kr-aleksey/OData1C.git"
+AuthorGitHub = "https://github.com/kr-aleksey"
