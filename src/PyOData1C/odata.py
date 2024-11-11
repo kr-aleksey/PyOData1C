@@ -240,6 +240,7 @@ class ODataManager:
         return f'{self.odata_class.__name__} manager'
 
     def _check_response(self, ok_status: int) -> None:
+        """Checking response status code."""
         if self.response.status_code != ok_status:
             raise ResponseError(self.response.status_code,
                                 self.response.reason,
@@ -249,6 +250,7 @@ class ODataManager:
                   data: list[dict[str, Any]] | dict[str, Any],
                   ignore_invalid: bool = False
                   ) -> list[OdataModel] | OdataModel:
+        """Validation of response data."""
         self.validation_errors = []
         if isinstance(data, list):
             validated_objs = []
@@ -260,6 +262,7 @@ class ODataManager:
     def _validate_obj(self,
                       obj: dict[str, Any],
                       ignore_invalid: bool) -> OdataModel:
+        """Object validation."""
         try:
             return self.odata_class.entity_model.model_validate(obj)
         except ValidationError as e:
@@ -268,6 +271,7 @@ class ODataManager:
                 raise e
 
     def _json(self) -> dict[str, Any]:
+        """Decodes json response."""
         try:
             data = self.response.json()
         except r_exceptions.JSONDecodeError as e:
@@ -275,18 +279,22 @@ class ODataManager:
         return data
 
     def get_url(self) -> str:
+        """Returns the url of the entity."""
         return (f'{self.odata_class.database}'
                 f'/{self.odata_path}'
                 f'/{self.odata_class.entity_name}')
 
     def get_canonical_url(self, guid: str) -> str:
+        """Returns the canonical url of the entity."""
         return f"{self.get_url()}(guid'{guid}')"
 
     def all(self, ignor_invalid: bool = False) -> list[OdataModel]:
-        """Returns validated instances of the OdataModel class.
+        """
+        Returns validated instances of the OdataModel class.
         If ignor_invalid = True, invalid objects will be skipped,
         errors will be accumulated in self.validation_errors.
-        Otherwise, a pydantic.ValidationError exception will be raised."""
+        Otherwise, a pydantic.ValidationError exception will be raised.
+        """
         self.request = Request(method='GET',
                                relative_url=self.get_url(),
                                query_params=self.prepare_qps(
@@ -335,6 +343,7 @@ class ODataManager:
     def post_document(self,
                       guid: str,
                       operational_mode: bool = False) -> None:
+        """Document posting."""
         self.request = Request(
             method='POST',
             relative_url=f'{self.get_canonical_url(guid)}/Post',
@@ -348,6 +357,7 @@ class ODataManager:
         self._check_response(HTTPStatus.OK)
 
     def unpost_document(self, guid: str) -> None:
+        """Cancel posting a document."""
         self.request = Request(
             method='POST',
             relative_url=f'{self.get_canonical_url(guid)}/Unpost'
@@ -429,6 +439,7 @@ class ODataManager:
         return '$skip', self._skip
 
     def skip(self, n: int) -> 'ODataManager':
+        """Skips n number of entities."""
         self._skip = n
         return self
 
@@ -437,6 +448,7 @@ class ODataManager:
         return '$top', self._top
 
     def top(self, n: int) -> 'ODataManager':
+        """Getting n number of entities."""
         self._top = n
         return self
 
