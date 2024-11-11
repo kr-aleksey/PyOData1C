@@ -1,20 +1,17 @@
-PyOData1C - ORM для обмена данными с системами учета компании "1С"
-
+# PyOData1C - ORM для обмена данными с системами учета компании "1С"
 PyOData1C работает через HTTP REST сервис 1С. REST 1С использует протокол OData версии 3. REST интерфейс использует 
 возможности протокола OData лишь частично. В свою очередь в PyOData1C реализована поддержка только основных возможностей 
 REST OData 1C. PyOData1C использует Pydantic для сериализации, десериализации и валидации. 
 
-Установка
+## Установка
+`pip install PyOData1C`
 
-pip install PyOData1C
+## Зависимости
+- Python >= 3.11
+- Pydantic >= 2.9
+- Requests >= 2.32
 
-Зависимости
-
-Python >= 3.11
-Pydantic >= 2.9
-Requests >= 2.32
-
-Использование
+## Использование
 
 ```python
 from PyOData1C.http import auth, Connection
@@ -55,8 +52,7 @@ with Connection('10.0.0.1',
                                        .all())
 ```
 
-class http.Connection
-
+### class http.Connection
 Класс http.Connection предоставляет интерфейс для отправки http запросов. Экземпляр класса может быть создан непосредственно. 
 Или используя синтаксис контекстного менеджера. Конструктор класса принимает параметры: host - доменное имя или ip-адрес
 сервера 1С, protocol - используемый протокол, authentication - аутентификация, connection_timeout - таймаут соединения в
@@ -74,8 +70,7 @@ conn = Connection('my1c.domain.ru',
 ```
 
 
-class models.OdataModel
-
+### class models.OdataModel
 Класс models.OdataModel наследуется от класса pydantic.Basemodel. Ваши модели данных должны наследоваться от этого 
 класса. Вы можете использовать обширные возможности Pydantic для валидации данных.
 
@@ -92,8 +87,7 @@ class MyModel(OdataModel):
     }
 ```
 
-class odata.Odata
-
+### class odata.Odata
 Наследуйтесь от класса odata.Odata для описания сущности 1С.
 ```python
 class FooOdata(OData):
@@ -102,34 +96,34 @@ class FooOdata(OData):
     entity_name='bar'       # Имя сущности в 1С
 ```
 
-method manager
+### method manager
 Принимает экземпляр класса http.Connection. Возвращает экземпляр odata.Manager.
 
-class.ODataManager
+### class.ODataManager
 Экземпляр класса создается через метод FooOdata.manager().
 
-method all()
+### method all()
 Выполняет запрос, возвращает список валидных объектов сущности. Если один из объектов не валиден будет вызвано 
 исключение pydantic.ValidationError. Это поведение можно изменить передав параметр ignor_invalid=True. В этом случае
 невалидные объекты будут игнорироваться, атрибут validation_errors менеджера будет содержать список ошибок валидации.
 Исключение не будет вызвано.
 
-method get()
+### method get()
 Выполняет запрос. Возвращает один объект по его GUID. При ошибке валидации будет вызвано исключение
 pydantic.ValidationError.
 
-method update()
+### method update()
 Выполняет запрос patch для объекта по его GUID. Принимает аргумент data - объект модели данных или словарь с обновляемыми
 данными.
 
-method post_document()
+### method post_document()
 Выполняет запрос на проведение документа по его GUID. Принимает аргумент operational_mode - оперативный режим 
 проведения документа. 
 
-method unpost_document()
+### method unpost_document()
 Выполняет запрос отмены проведения документа.
 
-method filter()
+### method filter()
 Запрос не выполняет. Устанавливает параметры фильтрации. Принимает ключевые аргументы - lookups в стиле DjangoORM или 
 позиционные аргументы экземпляров Odata.Q(). 
 
@@ -144,8 +138,3 @@ filter(foo='abc')
 filter(bar__gt=100)
 filter(uid_1c__in__guid=[...])
 ```
-
-
-
-
-
