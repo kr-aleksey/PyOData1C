@@ -278,6 +278,13 @@ class ODataManager:
             raise ODataError(e)
         return data
 
+    @staticmethod
+    def _to_dict(data: OdataModel | dict[str, Any]) -> dict[str, Any]:
+        """Converts data to dict."""
+        if isinstance(data, OdataModel):
+            return data.model_dump(by_alias=True)
+        return data
+
     def get_url(self) -> str:
         """Returns the url of the entity."""
         return (f'{self.odata_class.database}'
@@ -313,6 +320,15 @@ class ODataManager:
             )
         return self._validate(data, ignor_invalid)
 
+    def create(self, data: OdataModel | dict[str, Any]) -> OdataModel:
+        """Creates a new entity."""
+        self.request = Request(method='POST',
+                               relative_url=self.get_url(),
+                               data=self._to_dict(data))
+        self.response = self.connection.send_request(self.request)
+        self._check_response(HTTPStatus.CREATED)
+        return self._validate(self._json())
+
     def get(self, guid: str) -> OdataModel:
         """Get an entity by guid."""
         self.request = Request(method='GET',
@@ -329,13 +345,9 @@ class ODataManager:
                guid: str,
                data: OdataModel | dict[str, Any]) -> OdataModel:
         """Updates (patch) an entity by guid."""
-        if isinstance(data, OdataModel):
-            request_data = data.model_dump(by_alias=True)
-        else:
-            request_data = data
         self.request = Request(method='PATCH',
                                relative_url=self.get_canonical_url(guid),
-                               data=request_data)
+                               data=self._to_dict(data))
         self.response = self.connection.send_request(self.request)
         self._check_response(HTTPStatus.OK)
         return self._validate(self._json())

@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-from pprint import pprint
 
 from pydantic import Field, UUID1, field_serializer
 
@@ -41,20 +40,22 @@ class NomenclatureOdata(OData):
     entity_name = 'Catalog_Номенклатура'
 
 
-with Connection('erp.polipak.local',
+with Connection('erp.domain.local',
                 'http',
                 auth.HTTPBasicAuth('user', 'pass')) as conn:
-    nomenclatures: list[OdataModel] = (NomenclatureOdata
-                                       .manager(conn)
-                                       .expand('measure_unit', 'nomenclature_type')
-                                       .filter(code__in=['00-00000150', '00-00000370'])
-                                       .all())
+    nomenclatures: list[OdataModel] = (
+        NomenclatureOdata
+        .manager(conn)
+        .expand('measure_unit', 'nomenclature_type')
+        .filter(code__in=['00-00000150', '00-00000370'])
+        .all()
+    )
 print(nomenclatures)
+
 
 """
 Пример 2
 """
-
 
 class ProductModel(OdataModel):
     uid_1c: UUID1 = Field(alias='Номенклатура_Key',
@@ -81,15 +82,13 @@ class StageModel(OdataModel):
         return stage_date.isoformat('T', 'seconds')
 
 
-
 class StageOdata(OData):
     database = 'erp_dev'
     entity_model = StageModel
     entity_name = 'Document_ЭтапПроизводства2_2'
 
 
-
-with Connection('erp.polipak.local',
+with Connection('erp.domain.local',
                 'http',
                 auth.HTTPBasicAuth('user', 'pass')) as conn:
     manager = StageOdata.manager(conn)
@@ -98,9 +97,42 @@ with Connection('erp.polipak.local',
               .top(5)
               .skip(2)
               .all())
-    pprint(stages)
+    print(stages)
     stage = manager.get(guid='4ab2c2af-8a36-11ec-aa39-ac1f6bd30991')
-    pprint(stage)
+    print(stage)
     stage.stage_date = datetime.now()
     stage = manager.update(stage.uid_1c, stage)
-    pprint(stage)
+    print(stage)
+
+
+"""
+Пример 3
+"""
+
+class StageCreateModel(OdataModel):
+    uid_1c: UUID1 = Field(alias='Ref_Key',
+                          exclude=True)
+    number: str = Field(alias='Number')
+    stage_date: datetime = Field(alias='Date')
+
+
+    @field_serializer('stage_date')
+    def serialize_stage_date(self, stage_date: datetime, _info):
+        return stage_date.isoformat('T', 'seconds')
+
+
+class StageOdata(OData):
+    database = 'erp_dev'
+    entity_model = StageModel
+    entity_name = 'Document_ЭтапПроизводства2_2'
+
+
+data = StageModel.model_construct(number='st1',
+                                  stage_date=datetime(2024, 11, 12))
+
+with Connection('erp.domain.local',
+                'http',
+                auth.HTTPBasicAuth('user', 'pass')) as conn:
+
+    stage = StageOdata.manager(conn).create(data)
+    print(stage)
