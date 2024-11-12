@@ -98,7 +98,7 @@ class FooOdata(OData):
     entity_name='bar'       # Имя сущности в 1С
 ```
 
-### method manager
+### method manager()
 Принимает экземпляр класса __http.Connection__. Возвращает экземпляр __odata.Manager__.
 
 ### class.ODataManager
@@ -135,7 +135,7 @@ __pydantic.ValidationError__.
 __entity_model.nested_models__
 
 ### method filter()
-Запрос не выполняет. Устанавливает параметры фильтрации. Принимает ключевые аргументы - lookups в стиле DjangoORM или 
+Запрос не выполняет. Устанавливает параметры фильтрации __$filter__. Принимает ключевые аргументы - lookups в стиле DjangoORM или 
 позиционные аргументы экземпляров __Odata.Q()__. 
 
 Lookup имеет формат field__operator__annotation, где:
