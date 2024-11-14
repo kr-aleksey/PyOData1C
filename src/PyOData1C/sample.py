@@ -4,24 +4,24 @@ from decimal import Decimal
 from pydantic import Field, UUID1, field_serializer
 
 from PyOData1C.http import Connection, auth
-from PyOData1C.models import OdataModel
+from PyOData1C.models import ODataModel
 from PyOData1C.odata import OData
 
 """
 Пример 1
 """
 
-class NomenclatureTypeModel(OdataModel):
+class NomenclatureTypeModel(ODataModel):
     uid_1c: str = Field(alias='Ref_Key', max_length=36, exclude=True)
     name: str = Field(alias='Description', max_length=200)
 
 
-class MeasureUnitModel(OdataModel):
+class MeasureUnitModel(ODataModel):
     uid_1c: UUID1 = Field(alias='Ref_Key', exclude=True)
     name: str = Field(alias='Description', max_length=15)
 
 
-class NomenclatureModel(OdataModel):
+class NomenclatureModel(ODataModel):
     uid_1c: UUID1 = Field(alias='Ref_Key', exclude=True)
     code: str = Field(alias='Code', max_length=12)
     name: str = Field(alias='Description', max_length=200)
@@ -43,7 +43,7 @@ class NomenclatureOdata(OData):
 with Connection('erp.domain.local',
                 'http',
                 auth.HTTPBasicAuth('user', 'pass')) as conn:
-    nomenclatures: list[OdataModel] = (
+    nomenclatures: list[ODataModel] = (
         NomenclatureOdata
         .manager(conn)
         .expand('measure_unit', 'nomenclature_type')
@@ -57,13 +57,13 @@ print(nomenclatures)
 Пример 2
 """
 
-class ProductModel(OdataModel):
+class ProductModel(ODataModel):
     uid_1c: UUID1 = Field(alias='Номенклатура_Key',
                           exclude=True)
     quantity: Decimal = Field(alias='Количество')
 
 
-class StageModel(OdataModel):
+class StageModel(ODataModel):
     uid_1c: UUID1 = Field(alias='Ref_Key',
                           exclude=True)
     number: str = Field(alias='Number',
@@ -109,7 +109,7 @@ with Connection('erp.domain.local',
 Пример 3
 """
 
-class StageCreateModel(OdataModel):
+class StageCreateModel(ODataModel):
     uid_1c: UUID1 = Field(alias='Ref_Key',
                           exclude=True)
     number: str = Field(alias='Number')

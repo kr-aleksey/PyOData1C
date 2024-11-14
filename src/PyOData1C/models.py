@@ -3,7 +3,7 @@ from typing import ClassVar, Optional
 from pydantic import BaseModel
 
 
-class OdataModel(BaseModel):
+class ODataModel(BaseModel):
     """
     Data model for serialization, deserialization and validation.
     The nested_models attribute is used to optimize the query.

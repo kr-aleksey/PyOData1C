@@ -15,17 +15,17 @@ REST OData 1C. PyOData1C использует Pydantic для сериализа
 
 ```python
 from PyOData1C.http import auth, Connection
-from PyOData1C.models import OdataModel
+from PyOData1C.models import ODataModel
 from PyOData1C.odata import OData
 from pydantic import Field, UUID1
 
 
-class MeasureUnitModel(OdataModel):
+class MeasureUnitModel(ODataModel):
     uid: UUID1 = Field(alias='Ref_Key', exclude=True)
     name: str = Field(alias='Description', max_length=6)
 
 
-class NomenclatureModel(OdataModel):
+class NomenclatureModel(ODataModel):
     uid: UUID1 = Field(alias='Ref_Key', exclude=True)
     code: str = Field(alias='Code', max_length=12)
     name: str = Field(alias='Description', max_length=200)
@@ -45,7 +45,7 @@ class NomenclatureOdata(OData):
 with Connection('10.0.0.1',
                 'http',
                 auth.HTTPBasicAuth('user', 'pass')) as conn:
-    nomenclatures: list[OdataModel] = (NomenclatureOdata
+    nomenclatures: list[ODataModel] = (NomenclatureOdata
                                        .manager(conn)
                                        .expand('measure_unit')
                                        .filter(code__in=['00-123', '00-456'])
@@ -72,17 +72,17 @@ conn = Connection('my1c.domain.ru',
 ```
 
 
-### class models.OdataModel
-Класс models.OdataModel наследуется от класса pydantic.Basemodel. Ваши модели данных должны наследоваться от этого 
+### class models.ODataModel
+Класс models.ODataModel наследуется от класса pydantic.Basemodel. Ваши модели данных должны наследоваться от этого 
 класса. Вы можете использовать обширные возможности Pydantic для валидации данных.
 
-models.OdataModel.nested_models
+models.ODataModel.nested_models
 
 Атрибут nested_models используется для оптимизации запросов OData. Представляет собой словарь ключи которого - строки с
 именами полей содержащих вложенные модели, значения - вложенные модели.
 
 ```python
-class MyModel(OdataModel):
+class MyModel(ODataModel):
     ...
     nested_models = {
         'measure_unit': MyNestedModel
@@ -112,7 +112,7 @@ class FooOdata(OData):
 
 ### method create()
 Выполняет запрос. Создает и возвращает новый объект. Принимает обязательный аргумент __data__ - словарь или объект 
-__OdataModel__.
+__ODataModel__.
 
 ### method get()
 Выполняет запрос. Возвращает один объект по его GUID. При ошибке валидации будет вызвано исключение
