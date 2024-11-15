@@ -351,7 +351,10 @@ class ODataManager:
             method='PATCH',
             relative_url=self.get_canonical_url(guid),
             data=self._to_dict(data),
-            query_params=self.prepare_query_params(self.qp_select)
+            query_params=self.prepare_query_params(
+                self.qp_select,
+                self.qp_expand
+            )
         )
         self.response = self.connection.send_request(self.request)
         self._check_response(HTTPStatus.OK)
