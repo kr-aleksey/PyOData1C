@@ -304,12 +304,9 @@ class ODataManager:
         """
         self.request = Request(method='GET',
                                relative_url=self.get_url(),
-                               query_params=self.prepare_qps(
-                                   self.qp_select,
-                                   self.qp_expand,
-                                   self.qp_top,
-                                   self.qp_skip,
-                                   self.qp_filter))
+                               query_params=self.prepare_query_params(
+                                   self.qp_select, self.qp_expand, self.qp_top,
+                                   self.qp_skip, self.qp_filter))
         self.response = self.connection.send_request(self.request)
         self._check_response(HTTPStatus.OK)
         try:
@@ -333,9 +330,8 @@ class ODataManager:
         """Get an entity by guid."""
         self.request = Request(method='GET',
                                relative_url=self.get_canonical_url(guid),
-                               query_params=self.prepare_qps(
-                                   self.qp_select,
-                                   self.qp_expand)
+                               query_params=self.prepare_query_params(
+                                   self.qp_select, self.qp_expand)
                                )
         self.response = self.connection.send_request(self.request)
         self._check_response(HTTPStatus.OK)
@@ -382,8 +378,6 @@ class ODataManager:
     @property
     def qp_select(self) -> tuple[str, str | None]:
         qp = '$select'
-        if self._filter is None:
-            return qp, None
         fields = self.odata_class.entity_model.model_fields
         nested_models = self.odata_class.entity_model.nested_models
         aliases = []
@@ -465,7 +459,7 @@ class ODataManager:
         return self
 
     @staticmethod
-    def prepare_qps(*args: tuple[str, str]) -> dict[str, Any]:
+    def prepare_query_params(*args: tuple[str, str]) -> dict[str, Any]:
         qps = {}
         for qp, val in args:
             if val is not None:

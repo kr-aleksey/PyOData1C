@@ -135,8 +135,8 @@ __pydantic.ValidationError__.
 __entity_model.nested_models__
 
 ### method filter()
-Запрос не выполняет. Устанавливает параметры фильтрации __$filter__. Принимает ключевые аргументы - lookups в стиле DjangoORM или 
-позиционные аргументы экземпляров __Odata.Q()__. 
+Запрос не выполняет. Устанавливает параметры фильтрации __$filter__. Принимает ключевые аргументы - lookups в стиле
+DjangoORM или позиционные аргументы экземпляров __Odata.Q()__. 
 
 Lookup имеет формат field__operator__annotation, где:
 field - имя поля модели данных;
@@ -157,3 +157,60 @@ filter(uid_1c__in__guid=[...])
 ### method top()
 Запрос не выполняет. Устанавливает параметр запроса __$top__. Принимает целое число - количество элементов, которое 
 будет получено.
+
+## Отладка
+Объект класса __ODataManager__ имеет атрибуты __request__ и __response__. После выполнения запроса их значениями будут
+объекты классов __PyOData.http.Request__ и requests.Response соответственно. Вы можете использовать это для отладки
+своего кода.
+
+
+```Python
+from datetime import datetime
+from pprint import pprint
+
+from pydantic import Field, UUID1, field_serializer
+
+from PyOData1C.http import Connection, auth
+from PyOData1C.models import ODataModel
+from PyOData1C.odata import OData
+
+
+class StageModel(ODataModel):
+    uid_1c: UUID1 = Field(alias='Ref_Key', exclude=True)
+    number: str = Field(alias='Number')
+    stage_date: datetime = Field(alias='Date')
+
+    @field_serializer('stage_date')
+    def serialize_stage_date(self, stage_date: datetime, _info):
+        return stage_date.isoformat('T', 'seconds')
+
+
+class StageOdata(OData):
+    database = 'erp_dev'
+    entity_model = StageModel
+    entity_name = 'Document_ЭтапПроизводства2_2'
+
+with Connection('10.0.0.1',
+                'http',
+                auth.HTTPBasicAuth('user', 'pass')) as conn:
+    manager = StageOdata.manager(conn)
+    stage = manager.top(3).all()
+    pprint(manager.request)
+    pprint(manager.response.json())
+```
+```python
+Request(method='GET',
+        relative_url='erp_dev/odata/standard.odata/Document_ЭтапПроизводства2_2',
+        query_params={'$select': 'Ref_Key, Number, Date', '$top': 3},
+        data=None)
+{'odata.metadata': 'http://10.0.0.1/erp_dev/odata/standard.odata/$metadata#Document_ЭтапПроизводства2_2',
+ 'value': [{'Date': '2021-09-29T10:00:00',
+            'Number': 'ПП00-5729.3.1.5',
+            'Ref_Key': 'ce52f328-3f1d-11ed-aa45-ac1f6bd30990'},
+           {'Date': '2022-01-03T09:47:16',
+            'Number': 'ПП00-1.3.1',
+            'Ref_Key': 'f75e2f51-6c60-11ec-aa38-ac1f6bd30991'},
+           {'Date': '2022-01-03T11:18:44',
+            'Number': 'ПП00-26.1.1',
+            'Ref_Key': 'ee3c0030-6d36-11ec-aa38-ac1f6bd30991'}]}
+```
