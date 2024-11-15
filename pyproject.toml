@@ -1,6 +1,6 @@
 [project]
 name = "PyOData1C"
-version = "0.0.5"
+version = "0.0.6"
 authors = [
   { name="Aleksey Kravtsun", email="kravtsun.aleksey@gmail.com" },
 ]

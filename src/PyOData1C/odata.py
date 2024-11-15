@@ -302,11 +302,17 @@ class ODataManager:
         errors will be accumulated in self.validation_errors.
         Otherwise, a pydantic.ValidationError exception will be raised.
         """
-        self.request = Request(method='GET',
-                               relative_url=self.get_url(),
-                               query_params=self.prepare_query_params(
-                                   self.qp_select, self.qp_expand, self.qp_top,
-                                   self.qp_skip, self.qp_filter))
+        self.request = Request(
+            method='GET',
+            relative_url=self.get_url(),
+            query_params=self.prepare_query_params(
+                self.qp_select,
+                self.qp_expand,
+                self.qp_top,
+                self.qp_skip,
+                self.qp_filter
+            )
+        )
         self.response = self.connection.send_request(self.request)
         self._check_response(HTTPStatus.OK)
         try:
@@ -341,9 +347,12 @@ class ODataManager:
                guid: str,
                data: ODataModel | dict[str, Any]) -> ODataModel:
         """Updates (patch) an entity by guid."""
-        self.request = Request(method='PATCH',
-                               relative_url=self.get_canonical_url(guid),
-                               data=self._to_dict(data))
+        self.request = Request(
+            method='PATCH',
+            relative_url=self.get_canonical_url(guid),
+            data=self._to_dict(data),
+            query_params=self.prepare_query_params(self.qp_select)
+        )
         self.response = self.connection.send_request(self.request)
         self._check_response(HTTPStatus.OK)
         return self._validate(self._json())
