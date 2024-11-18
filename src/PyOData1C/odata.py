@@ -1,6 +1,6 @@
 from datetime import datetime
 from http import HTTPStatus
-from typing import Any, Callable, Iterable, Type
+from typing import Any, Callable, Iterable, Type, TypeVar
 
 import requests.exceptions as r_exceptions
 from pydantic import ValidationError
@@ -9,6 +9,8 @@ from requests import Response
 from PyOData1C.exeptions import ODataError, ResponseError
 from PyOData1C.http import Connection, Request
 from PyOData1C.models import ODataModel
+
+OM = TypeVar('OM', bound=ODataModel)
 
 type_repr = {
     bool: lambda v: str(v).lower(),
@@ -206,7 +208,7 @@ class Q:
 
 class OData:
     database: str
-    entity_model: Type[ODataModel]
+    entity_model: OM
     entity_name: str
 
     _err_msg: str = "Required attribute not defined: {}."
@@ -249,7 +251,7 @@ class ODataManager:
     def _validate(self,
                   data: list[dict[str, Any]] | dict[str, Any],
                   ignore_invalid: bool = False
-                  ) -> list[ODataModel] | ODataModel:
+                  ) -> list[OM] | OM:
         """Validation of response data."""
         self.validation_errors = []
         if isinstance(data, list):
@@ -261,7 +263,7 @@ class ODataManager:
 
     def _validate_obj(self,
                       obj: dict[str, Any],
-                      ignore_invalid: bool) -> ODataModel:
+                      ignore_invalid: bool) -> OM:
         """Object validation."""
         try:
             return self.odata_class.entity_model.model_validate(obj)
@@ -279,7 +281,7 @@ class ODataManager:
         return data
 
     @staticmethod
-    def _to_dict(data: ODataModel | dict[str, Any]) -> dict[str, Any]:
+    def _to_dict(data: OM | dict[str, Any]) -> dict[str, Any]:
         """Converts data to dict."""
         if isinstance(data, ODataModel):
             return data.model_dump(by_alias=True)
@@ -295,7 +297,7 @@ class ODataManager:
         """Returns the canonical url of the entity."""
         return f"{self.get_url()}(guid'{guid}')"
 
-    def all(self, ignor_invalid: bool = False) -> list[ODataModel]:
+    def all(self, ignor_invalid: bool = False) -> list[OM]:
         """
         Returns validated instances of the ODataModel class.
         If ignor_invalid = True, invalid objects will be skipped,
@@ -323,7 +325,7 @@ class ODataManager:
             )
         return self._validate(data, ignor_invalid)
 
-    def create(self, data: ODataModel | dict[str, Any]) -> ODataModel:
+    def create(self, data: OM| dict[str, Any]) -> OM:
         """Creates a new entity."""
         self.request = Request(method='POST',
                                relative_url=self.get_url(),
@@ -332,7 +334,7 @@ class ODataManager:
         self._check_response(HTTPStatus.CREATED)
         return self._validate(self._json())
 
-    def get(self, guid: str) -> ODataModel:
+    def get(self, guid: str) -> OM:
         """Get an entity by guid."""
         self.request = Request(method='GET',
                                relative_url=self.get_canonical_url(guid),
@@ -345,7 +347,7 @@ class ODataManager:
 
     def update(self,
                guid: str,
-               data: ODataModel | dict[str, Any]) -> ODataModel:
+               data: OM | dict[str, Any]) -> OM:
         """Updates (patch) an entity by guid."""
         self.request = Request(
             method='PATCH',
