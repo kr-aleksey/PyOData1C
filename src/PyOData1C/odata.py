@@ -45,7 +45,13 @@ class Q:
         obj = super().__new__(cls)
         children = []
         for key, value in kwargs.items():
-            _, lookup, *_ = *key.split('__'), None
+            key_elements = key.split('__')
+            if key_elements[-1] in cls._annotations:
+                lookup = key_elements[-2]
+            elif key_elements[-1] in cls._operators:
+                lookup = key_elements[-1]
+            else:
+                lookup = None
             if lookup == 'in':
                 children.append(
                     cls.create(children=[(key, value)], connector=Q.OR))
@@ -144,11 +150,20 @@ class Q:
         :param field_mapping: {field_name: alias}
         :return: Expression. For example: "Name eq 'Ivanov'"
         """
-        field, operator, annotation, *_ = (
-            *lookup[0].split('__', maxsplit=3),
-            None,
-            None
-        )
+        lookup_elements = lookup[0].split('__')
+        if lookup_elements[-1] in self._annotations:
+            field_elements = lookup_elements[:-2]
+            operator = lookup_elements[-2]
+            annotation = lookup_elements[-1]
+        elif lookup_elements[-1] in self._operators:
+            field_elements = lookup_elements[:-1]
+            operator = lookup_elements[-1]
+            annotation = None
+        else:
+            field_elements = lookup_elements
+            operator = None
+            annotation = None
+        field = '__'.join(field_elements)
         if field_mapping is not None:
             if field not in field_mapping:
                 raise KeyError(
@@ -392,7 +407,12 @@ class ODataManager:
     @property
     def qp_select(self) -> tuple[str, str | None]:
         qp = '$select'
-        fields = self.odata_class.entity_model.model_fields
+        fields = {
+            field: info
+            for field, info
+            in self.odata_class.entity_model.model_fields.items()
+            if info.is_required()
+        }
         nested_models = self.odata_class.entity_model.nested_models
         aliases = []
         for field, info in fields.items():
@@ -436,7 +456,23 @@ class ODataManager:
         if self._filter is None:
             return qp, None
         fields = self.odata_class.entity_model.model_fields
-        field_mapping = {f: i.alias or f for f, i in fields.items()}
+        field_mapping = {}
+        for f, i in fields.items():
+            if '__' in f:
+                field_elements = f.split('__')
+                nested_field = []
+                model = self.odata_class.entity_model
+                for element in field_elements[:-1]:
+                    if element not in model.nested_models:
+                        raise ValueError(
+                            f"Nested model '{element}' not found."
+                        )
+                    nested_field.append(model.model_fields[element].alias)
+                    model = model.nested_models[element]
+                nested_field.append(model.model_fields[field_elements[-1]].alias)
+                field_mapping[f] = '/'.join(nested_field)
+            else:
+                field_mapping[f] = i.alias
         return qp, self._filter.build_expression(field_mapping)
 
     def filter(self, *args, **kwargs) -> 'ODataManager':
