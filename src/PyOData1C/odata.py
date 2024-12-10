@@ -150,19 +150,16 @@ class Q:
         :param field_mapping: {field_name: alias}
         :return: Expression. For example: "Name eq 'Ivanov'"
         """
-        lookup_elements = lookup[0].split('__')
-        if lookup_elements[-1] in self._annotations:
-            field_elements = lookup_elements[:-2]
-            operator = lookup_elements[-2]
-            annotation = lookup_elements[-1]
-        elif lookup_elements[-1] in self._operators:
-            field_elements = lookup_elements[:-1]
-            operator = lookup_elements[-1]
-            annotation = None
-        else:
-            field_elements = lookup_elements
-            operator = None
-            annotation = None
+        match lookup[0].split('__'):
+            case *field_elements, operator, annotation if (
+                operator in self._operators and annotation in self._annotations
+            ):
+                pass
+            case *field_elements, operator if operator in self._operators:
+                annotation = None
+            case field_elements:
+                operator = None
+                annotation = None
         field = '__'.join(field_elements)
         if field_mapping is not None:
             if field not in field_mapping:
