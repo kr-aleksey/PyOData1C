@@ -1,3 +1,4 @@
+from dataclasses import fields
 from datetime import datetime
 from http import HTTPStatus
 from typing import Any, Callable, Iterable, Type, TypeVar
@@ -45,13 +46,15 @@ class Q:
         obj = super().__new__(cls)
         children = []
         for key, value in kwargs.items():
-            key_elements = key.split('__')
-            if key_elements[-1] in cls._annotations:
-                lookup = key_elements[-2]
-            elif key_elements[-1] in cls._operators:
-                lookup = key_elements[-1]
-            else:
-                lookup = None
+            match key.split('__'):
+                case *_, lookup, annotation if (
+                    lookup in cls._operators and annotation in cls._annotations
+                ):
+                    pass
+                case *_, lookup if lookup in cls._operators:
+                    pass
+                case _:
+                    lookup = None
             if lookup == 'in':
                 children.append(
                     cls.create(children=[(key, value)], connector=Q.OR))
@@ -404,12 +407,7 @@ class ODataManager:
     @property
     def qp_select(self) -> tuple[str, str | None]:
         qp = '$select'
-        fields = {
-            field: info
-            for field, info
-            in self.odata_class.entity_model.model_fields.items()
-            if info.is_required()
-        }
+        fields = self.odata_class.entity_model.model_fields
         nested_models = self.odata_class.entity_model.nested_models
         aliases = []
         for field, info in fields.items():
@@ -469,7 +467,10 @@ class ODataManager:
                 nested_field.append(model.model_fields[field_elements[-1]].alias)
                 field_mapping[f] = '/'.join(nested_field)
             else:
-                field_mapping[f] = i.alias
+                if i and i.alias:
+                    field_mapping[f] = i.alias
+                else:
+                    field_mapping[f] = f
         return qp, self._filter.build_expression(field_mapping)
 
     def filter(self, *args, **kwargs) -> 'ODataManager':
