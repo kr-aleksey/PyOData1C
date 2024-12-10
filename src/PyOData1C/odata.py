@@ -1,4 +1,3 @@
-from dataclasses import fields
 from datetime import datetime
 from http import HTTPStatus
 from typing import Any, Callable, Iterable, Type, TypeVar
