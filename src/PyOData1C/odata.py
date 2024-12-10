@@ -392,7 +392,12 @@ class ODataManager:
     @property
     def qp_select(self) -> tuple[str, str | None]:
         qp = '$select'
-        fields = self.odata_class.entity_model.model_fields
+        fields = {
+            field: info
+            for field, info
+            in self.odata_class.entity_model.model_fields.items()
+            if info.is_required()
+        }
         nested_models = self.odata_class.entity_model.nested_models
         aliases = []
         for field, info in fields.items():
