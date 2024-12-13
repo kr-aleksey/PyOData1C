@@ -171,11 +171,6 @@ class Q:
                 )
             field = field_mapping[field]
         operator = operator or self._default_operator
-        if operator not in self._operators:
-            raise KeyError(
-                f"Unsupported operator {operator} ({lookup[0]}). "
-                f"Use one of {self._operators}."
-            )
         return self._get_lookup_builder(operator)(field, lookup[1], annotation)
 
     def _get_lookup_builder(self, lookup: str) -> Callable:
