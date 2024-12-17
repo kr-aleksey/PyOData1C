@@ -45,7 +45,15 @@ class Q:
         obj = super().__new__(cls)
         children = []
         for key, value in kwargs.items():
-            _, lookup, *_ = *key.split('__'), None
+            match key.split('__'):
+                case *_, lookup, annotation if (
+                    lookup in cls._operators and annotation in cls._annotations
+                ):
+                    pass
+                case *_, lookup if lookup in cls._operators:
+                    pass
+                case _:
+                    lookup = None
             if lookup == 'in':
                 children.append(
                     cls.create(children=[(key, value)], connector=Q.OR))
@@ -144,11 +152,17 @@ class Q:
         :param field_mapping: {field_name: alias}
         :return: Expression. For example: "Name eq 'Ivanov'"
         """
-        field, operator, annotation, *_ = (
-            *lookup[0].split('__', maxsplit=3),
-            None,
-            None
-        )
+        match lookup[0].split('__'):
+            case *field_elements, operator, annotation if (
+                operator in self._operators and annotation in self._annotations
+            ):
+                pass
+            case *field_elements, operator if operator in self._operators:
+                annotation = None
+            case field_elements:
+                operator = None
+                annotation = None
+        field = '__'.join(field_elements)
         if field_mapping is not None:
             if field not in field_mapping:
                 raise KeyError(
@@ -157,11 +171,6 @@ class Q:
                 )
             field = field_mapping[field]
         operator = operator or self._default_operator
-        if operator not in self._operators:
-            raise KeyError(
-                f"Unsupported operator {operator} ({lookup[0]}). "
-                f"Use one of {self._operators}."
-            )
         return self._get_lookup_builder(operator)(field, lookup[1], annotation)
 
     def _get_lookup_builder(self, lookup: str) -> Callable:
@@ -441,7 +450,26 @@ class ODataManager:
         if self._filter is None:
             return qp, None
         fields = self.odata_class.entity_model.model_fields
-        field_mapping = {f: i.alias or f for f, i in fields.items()}
+        field_mapping = {}
+        for f, i in fields.items():
+            if '__' in f:
+                field_elements = f.split('__')
+                nested_field = []
+                model = self.odata_class.entity_model
+                for element in field_elements[:-1]:
+                    if element not in model.nested_models:
+                        raise ValueError(
+                            f"Nested model '{element}' not found."
+                        )
+                    nested_field.append(model.model_fields[element].alias)
+                    model = model.nested_models[element]
+                nested_field.append(model.model_fields[field_elements[-1]].alias)
+                field_mapping[f] = '/'.join(nested_field)
+            else:
+                if i and i.alias:
+                    field_mapping[f] = i.alias
+                else:
+                    field_mapping[f] = f
         return qp, self._filter.build_expression(field_mapping)
 
     def filter(self, *args, **kwargs) -> 'ODataManager':
