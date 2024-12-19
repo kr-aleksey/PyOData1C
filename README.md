@@ -89,6 +89,8 @@ class MyModel(ODataModel):
     }
 ```
 
+Если поле имеет тип Optional, то оно не попадет в результаты запроса.
+
 ### class odata.Odata
 Наследуйтесь от класса odata.Odata для описания сущности 1С.
 ```python
@@ -148,6 +150,24 @@ annotation - аннотация guid или datetime
 filter(foo='abc')
 filter(bar__gt=100)
 filter(uid_1c__in__guid=[...])
+```
+
+В качестве field может быть указано поле вложенной модели.
+Для этого нужно в модель добавить описание вложенного поля в формате:
+
+model_1__...__model_N__field: Optional<тип поля> = Field(None)
+
+Примеры:
+```python
+# фильтр по полю name вложенной модели foo
+filter(foo__name='name')
+# в модели необходимо указать
+foo__name: Optional[str] = Field(None)
+
+# фильтр по полю uid_1c (тип поля guid) модели bar, которая вложена в модель foo
+filter(foo__bar__uid_1c__in__guid=[...])
+# в модели необходимо указать
+foo__bar__uid_1c: Optional[UUID1] = Field(None)
 ```
 
 ### method skip()
