@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Optional
 
 from pydantic import Field, UUID1, field_serializer
 
@@ -136,3 +137,41 @@ with Connection('erp.domain.local',
 
     stage = StageOdata.manager(conn).create(data)
     print(stage)
+
+
+"""
+Пример 4
+"""
+
+class WorkCenterModel(ODataModel):
+    type_uid_1c: UUID1 = Field(alias='ВидРабочегоЦентра_Key')
+
+
+class StageModel(ODataModel):
+    uid_1c: UUID1 = Field(alias='Ref_Key')
+    number: str = Field(alias='Number', max_length=15)
+
+    work_centers: list[WorkCenterModel] = Field(alias='ВидыРабочихЦентров')
+
+    work_centers__type_uid_1c: Optional[UUID1] = Field(None)
+
+    nested_models = {
+        'work_centers': WorkCenterModel,
+    }
+
+
+class StageOdata(OData):
+    database = 'erp_dev'
+    entity_model = StageModel
+    entity_name = 'Document_ЭтапПроизводства2_2'
+
+
+with Connection('erp.domain.local',
+                'http',
+                auth.HTTPBasicAuth('user', 'pass')) as conn:
+    manager = StageOdata.manager(conn)
+    stages = (manager
+              .filter(work_centers__type_uid_1c__in__guid=('4ab2c2af-8a36-11ec-aa39-ac1f6bd30900',
+                                                           '4ab2c2af-8a36-11ec-aa39-ac1f6bd30901'))
+              .all())
+    print(stages)
